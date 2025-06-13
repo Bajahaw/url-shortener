@@ -33,9 +33,13 @@ public class Controller {
         log.info("Started Server at " + PORT);
     }
 
+    /*  
+     * endpoint to shorten a URL. 
+     */
     private static void shorten(HttpExchange exchange) throws IOException {
         String src = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
 
+        // validate input by creating a URI
         try {
             var url = URI.create(src);
         } catch (Exception e) {
@@ -55,6 +59,10 @@ public class Controller {
         exchange.close();
     }
 
+    /*
+     * endpoint to redirect to the original URL.
+     * It will look for the key in the map and redirect to the original URL.
+     */
     private static void redirect(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         String key = path.substring(1);
