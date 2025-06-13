@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +16,7 @@ public class Main {
     private static final Logger log = Logger.getLogger(Main.class.getName());
     private static final ConcurrentMap<String,String> map = new ConcurrentHashMap<>();
     private static final SecureRandom random = new SecureRandom();
-    private static final char[] alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    private static final char[] alphabets = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private static final String baseUrl = "https://url.radhi.tech/";
     private static final int PORT = 8080;
 
@@ -26,9 +27,24 @@ public class Main {
 
         server.createContext("/shorten", exchange -> {
             String src = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+
             log.info("URL is being shortened: " + src);
 
-            // todo: check validity of src before generating
+            try { var url = URI.create(src); } catch (Exception e) {
+                var msg = "\"Not valid URL: '\" + src + \"' - \" + e.getMessage()";
+                byte[] res = msg.getBytes(StandardCharsets.UTF_8);
+                log.warning("Not valid URL: '" + src + "' - " + e.getMessage());
+
+                // write response body
+                exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+                exchange.sendResponseHeaders(400, res.length);
+                exchange.getResponseBody().write(res);
+                exchange.close();
+                return;
+            }
+
+            log.fine("after closing");
+
             String key = generateKey(6);
 
             // todo: use map only for caching
@@ -60,7 +76,6 @@ public class Main {
                 exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
                 exchange.sendResponseHeaders(404, res.length);
                 exchange.getResponseBody().write(res);
-
             }
             else {
                 // forwarding to destination url
@@ -78,7 +93,8 @@ public class Main {
     private static String generateKey(int len) {
         StringBuilder key = new StringBuilder(len);
         for (int i = 0; i < len; i++) {
-            char chr = alphabet[random.nextInt(alphabet.length)];
+            int rnd = random.nextInt(alphabets.length);
+            char chr = alphabets[rnd];
             key.append(chr);
         }
         return key.toString();
