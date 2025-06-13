@@ -22,6 +22,8 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
+        LoggingSetup.configure();
+
         // todo: db logic
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 
