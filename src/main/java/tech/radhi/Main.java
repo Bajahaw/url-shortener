@@ -45,8 +45,6 @@ public class Main {
                 return;
             }
 
-            log.fine("after closing");
-
             String key = generateKey(6);
 
             // todo: use map only for caching
@@ -62,9 +60,17 @@ public class Main {
         });
 
         server.createContext("/", exchange -> {
+
             String path = exchange.getRequestURI().getPath();
-            // todo: validate nested paths as well
-            String key = path.split("/")[1];
+            String key = path.substring(1);
+
+            if (!path.startsWith("/") || key.length() != 6 || !key.matches("[a-zA-Z]+")) {
+                log.warning("Invalid path: " + path);
+                exchange.sendResponseHeaders(400, -1);
+                exchange.close();
+                return;
+            }
+
             log.info("A request at: " + path + " - key: " + key);
 
             // getting destination url
