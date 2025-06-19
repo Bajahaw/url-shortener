@@ -33,7 +33,7 @@ public class Controller {
         log.info("Started Server at " + PORT);
     }
 
-    /*  
+    /**
      * endpoint to shorten a URL. 
      */
     private static void shorten(HttpExchange exchange) throws IOException {
@@ -51,7 +51,8 @@ public class Controller {
 
         String key = generateKey(6);
         // todo: use map only for caching
-        map.put(key, src);
+        // map.put(key, src);
+        DataSource.save(key, src);
 
         // send shortened url back as string
         String url = baseUrl + key;
@@ -59,7 +60,7 @@ public class Controller {
         exchange.close();
     }
 
-    /*
+    /**
      * endpoint to redirect to the original URL.
      * It will look for the key in the map and redirect to the original URL.
      */
@@ -75,7 +76,8 @@ public class Controller {
         }
 
         // getting destination url
-        String target = map.get(key);
+        // String target = map.get(key);
+        String target = DataSource.getUrl(key);
         if (target == null) {
             var msg = "Target url not found! - Key: " + key;
             exchangeTextResponse(exchange, msg, 404);

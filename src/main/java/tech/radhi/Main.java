@@ -11,7 +11,7 @@ public class Main {
 
         LoggingSetup.configure();
         Controller.start();
-        // todo: db logic
+        DataSource.connect();
 
         log.info("Application Started .. ready to receive requests");
 
