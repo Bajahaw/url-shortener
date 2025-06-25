@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.*;
 
-/* 
+/**
  * Java logging was not configured very well by default.
  * This class sets up a custom logging configuration
  * that outputs logs to the console with colors
@@ -41,6 +41,7 @@ class ColorFormatter extends Formatter {
     private static final String RED   = "\u001B[31m";
     private static final String YELLOW= "\u001B[33m";
     private static final String CYAN  = "\u001B[36m";
+    private static final String MAGENTA = "\u001B[35m";
 
     private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -69,14 +70,15 @@ class ColorFormatter extends Formatter {
                 RESET
         );
         String loggerName = r.getLoggerName();
+        String logger = String.format("%s%s%s", MAGENTA, loggerName, RESET);
         String message    = formatMessage(r);
 
         // timestamp, level, logger, then dash+message
         return String.format(
-                "%s\t%s\t%s - %s%n",
+                "%s\t%s\t%s\t: %s%n",
                 timestamp,
                 coloredLvl,
-                loggerName,
+                logger,
                 message
         );
     }
