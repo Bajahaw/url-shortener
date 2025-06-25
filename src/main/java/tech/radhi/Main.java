@@ -10,8 +10,8 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         LoggingSetup.configure();
-        Controller.start();
         DataSource.connect();
+        Controller.start();
 
         log.info("Application Started .. ready to receive requests");
 

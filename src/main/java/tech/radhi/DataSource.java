@@ -9,18 +9,17 @@ public class DataSource {
 
     private final static Logger log = Logger.getLogger(DataSource.class.getName());
 
-    private static final String url = System.getenv("DATABASE_URL");
-    private static final String username = System.getenv("DATABASE_USERNAME");
-    private static final String password = System.getenv("DATABASE_PASSWORD");
-    private static final String dbName = System.getenv("DATABASE_NAME");
+    private static final String url = getEnvOrElse("DATABASE_URL", "localhost:5432");
+    private static final String username = getEnvOrElse("DATABASE_USERNAME", "user");
+    private static final String password = getEnvOrElse("DATABASE_PASSWORD", "pass");
+    private static final String dbName = getEnvOrElse("DATABASE_NAME", "urls");
 
     private static final PGSimpleDataSource dataSource = new PGSimpleDataSource();
 
 
     public static void connect() {
 
-        dataSource.setServerNames(new String[]{url, "localhost"});
-        dataSource.setPortNumbers(new int[]{5432});
+        dataSource.setServerNames(new String[]{url});
         dataSource.setDatabaseName(dbName);
         dataSource.setUser(username);
         dataSource.setPassword(password);
@@ -72,6 +71,11 @@ public class DataSource {
             log.severe("Failed to retrieve from database - " + e.getMessage());
             return null;
         }
+    }
+
+    private static String getEnvOrElse(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return value != null ? value : defaultValue;
     }
 
 }
