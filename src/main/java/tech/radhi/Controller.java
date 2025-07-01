@@ -49,6 +49,13 @@ public class Controller {
             return;
         }
 
+        if (src.length() <= 1000) {
+            var msg = "Not valid URL: '" + src.substring(0, 100) + "...' - exceeds maximum length";
+            exchangeTextResponse(exchange, msg, 400);
+            exchange.close();
+            return;
+        }
+
         String key = generateKey(6);
         // todo: use map only for caching
         // map.put(key, src);
