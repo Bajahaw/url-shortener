@@ -39,18 +39,18 @@ public class Controller {
     private static void shorten(HttpExchange exchange) throws IOException {
         String src = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
 
-        // validate input by creating a URI
-        try {
-            var url = URI.create(src);
-        } catch (Exception e) {
-            var msg = "Not valid URL: '" + src + "' - " + e.getMessage();
+        if (src.length() >= 1000) {
+            var msg = "Not valid URL: '" + src.substring(0, 100) + "...' - exceeds maximum length";
             exchangeTextResponse(exchange, msg, 400);
             exchange.close();
             return;
         }
 
-        if (src.length() <= 1000) {
-            var msg = "Not valid URL: '" + src.substring(0, 100) + "...' - exceeds maximum length";
+        // validate input by creating a URI
+        try {
+            var url = URI.create(src);
+        } catch (Exception e) {
+            var msg = "Not valid URL: '" + src + "' - " + e.getMessage();
             exchangeTextResponse(exchange, msg, 400);
             exchange.close();
             return;
