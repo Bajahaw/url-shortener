@@ -26,21 +26,33 @@ public class Controller {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 
         // Controller endpoints
-        server.createContext("/shorten", Controller::shorten);
-        server.createContext("/", Controller::redirect);
+        server.createContext("/shorten", exchange ->
+                Thread.ofVirtual().start(() -> Controller.shorten(exchange))
+        );
+        server.createContext("/", exchange ->
+                Thread.ofVirtual().start(() -> Controller.redirect(exchange))
+        );
 
         server.start();
-        log.info("Started Server at " + PORT);
+        log.info("Started Http Server at port: " + PORT);
     }
 
     /**
-     * endpoint to shorten a URL. 
+     * endpoint to shorten a URL.
      */
-    private static void shorten(HttpExchange exchange) throws IOException {
-        String src = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+    private static void shorten(HttpExchange exchange) {
+        String src = null;
+        try {
+            src = new String(
+                    exchange.getRequestBody().readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
+        } catch (IOException e) {
+            log.severe("Error:" + e.getMessage());
+        }
 
-        if (src.length() >= 1000) {
-            var msg = "Not valid URL: '" + src.substring(0, 100) + "...' - exceeds maximum length";
+        if (src == null || src.length() >= 1000) {
+            var msg = "Invalid URL! URL either empty or too long.";
             exchangeTextResponse(exchange, msg, 400);
             exchange.close();
             return;
@@ -71,7 +83,7 @@ public class Controller {
      * endpoint to redirect to the original URL.
      * It will look for the key in the map and redirect to the original URL.
      */
-    private static void redirect(HttpExchange exchange) throws IOException {
+    private static void redirect(HttpExchange exchange) {
         String path = exchange.getRequestURI().getPath();
         String key = path.substring(1);
 
@@ -91,13 +103,16 @@ public class Controller {
         } else {
             // forwarding to destination url
             exchange.getResponseHeaders().add("Location", target);
-            exchange.sendResponseHeaders(302, -1);
+            try { exchange.sendResponseHeaders(302, -1); }
+            catch (IOException e) {
+                log.severe("Could not redirect: " + e.getMessage());
+            }
         }
 
         exchange.close();
     }
 
-    private static void exchangeTextResponse(HttpExchange exchange, String body, int code) throws IOException {
+    private static void exchangeTextResponse(HttpExchange exchange, String body, int code) {
         byte[] res = body.getBytes(StandardCharsets.UTF_8);
 
         if (code != 200) log.warning(
@@ -106,8 +121,12 @@ public class Controller {
 
         // write response body
         exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
-        exchange.sendResponseHeaders(code, res.length);
-        exchange.getResponseBody().write(res);
+        try {
+            exchange.sendResponseHeaders(code, res.length);
+            exchange.getResponseBody().write(res);
+        } catch (IOException e) {
+            log.severe("Error happened while Sending " + code + " response: " + body + " - " + e.getMessage());
+        }
     }
 
     private static String generateKey(int len) {
