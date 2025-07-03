@@ -8,15 +8,15 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class Controller {
 
     private static final Logger log = Logger.getLogger(Controller.class.getName());
-    private static final ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
+    private static final Map<String, String> cache = Collections.synchronizedMap(new SizedLinkedHashMap<>(1024));
     private static final SecureRandom random = new SecureRandom();
     private static final char[] alphabets = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private static final String baseUrl = "https://url.radhi.tech/";
@@ -75,8 +75,10 @@ public class Controller {
         }
 
         String key = generateKey(6);
-        // todo: use map only for caching
-        // map.put(key, src);
+
+        // Saving source url in cache as well as in db
+        // no need to synchronize cuz cache is Collections.synchronizedMap
+        cache.put(key, src);
         DataSource.save(key, src);
 
         // send shortened url back as string
@@ -103,8 +105,8 @@ public class Controller {
         }
 
         // getting destination url
-        // String target = map.get(key);
-        String target = DataSource.getUrl(key);
+        String cachedTarget = cache.get(key);
+        String target = cachedTarget != null ? cachedTarget : DataSource.getUrl(key);
         if (target == null) {
             var msg = "Target url not found! - Key: " + key;
             exchangeTextResponse(exchange, msg, 404);
@@ -146,7 +148,7 @@ public class Controller {
     }
 
     /**
-     * Helper method for generating random and unique key
+     * Helper method for generating random and unique keys
      *
      * @param len The length of the required key
      * @return the generated key as String
