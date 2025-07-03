@@ -21,6 +21,11 @@ public class Controller {
     private static final String baseUrl = "https://url.radhi.tech/";
     private static final int PORT = 8080;
 
+    /**
+     * Main method to start the server and create the needed endpoints.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     public static void start() throws IOException {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
@@ -39,6 +44,8 @@ public class Controller {
 
     /**
      * endpoint to shorten a URL.
+     *
+     * @param exchange for handling http requests
      */
     private static void shorten(HttpExchange exchange) {
         String src = null;
@@ -47,22 +54,18 @@ public class Controller {
                     exchange.getRequestBody().readAllBytes(),
                     StandardCharsets.UTF_8
             );
-        } catch (IOException e) {
-            log.severe("Error:" + e.getMessage());
-        }
+            // validate input by creating a URI
+            var _ = URI.create(src);
 
-        if (src == null || src.length() >= 1000) {
-            var msg = "Invalid URL! URL either empty or too long.";
+        } catch (Exception e) {
+            var msg = "Not valid URL: '" + src + "' - " + e.getMessage();
             exchangeTextResponse(exchange, msg, 400);
             exchange.close();
             return;
         }
 
-        // validate input by creating a URI
-        try {
-            var url = URI.create(src);
-        } catch (Exception e) {
-            var msg = "Not valid URL: '" + src + "' - " + e.getMessage();
+        if (src.length() >= 1000) {
+            var msg = "Invalid URL! URL either empty or too long.";
             exchangeTextResponse(exchange, msg, 400);
             exchange.close();
             return;
@@ -82,6 +85,8 @@ public class Controller {
     /**
      * endpoint to redirect to the original URL.
      * It will look for the key in the map and redirect to the original URL.
+     *
+     * @param exchange for handling http requests
      */
     private static void redirect(HttpExchange exchange) {
         String path = exchange.getRequestURI().getPath();
@@ -112,6 +117,14 @@ public class Controller {
         exchange.close();
     }
 
+    /**
+     * The following method is just a helper to avoid boiler.
+     * It is used to send only text responses with relevant status code
+     *
+     * @param exchange the same exchange used by the endpoint
+     * @param body the response body
+     * @param code the response status code
+     */
     private static void exchangeTextResponse(HttpExchange exchange, String body, int code) {
         byte[] res = body.getBytes(StandardCharsets.UTF_8);
 
@@ -129,6 +142,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Helper method for generating random and unique key
+     *
+     * @param len The length of the required key
+     * @return the generated key as String
+     */
     private static String generateKey(int len) {
         StringBuilder key = new StringBuilder(len);
         for (int i = 0; i < len; i++) {
