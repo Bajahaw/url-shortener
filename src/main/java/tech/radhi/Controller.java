@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class Controller {
@@ -31,12 +32,14 @@ public class Controller {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 
         // Controller endpoints
-        server.createContext("/shorten", exchange ->
-                Thread.ofVirtual().start(() -> Controller.shorten(exchange))
-        );
-        server.createContext("/", exchange ->
-                Thread.ofVirtual().start(() -> Controller.redirect(exchange))
-        );
+        server.createContext("/shorten", Controller::shorten);
+        server.createContext("/", Controller::redirect);
+        server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Shutting down...");
+            server.stop(0);
+        }));
 
         server.start();
         log.info("Started Http Server at port: " + PORT);
