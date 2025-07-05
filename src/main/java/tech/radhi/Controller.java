@@ -33,6 +33,7 @@ public class Controller {
 
         // Controller endpoints
         server.createContext("/shorten", Controller::shorten);
+        server.createContext("/health", Controller::health);
         server.createContext("/", Controller::redirect);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
@@ -121,6 +122,26 @@ public class Controller {
             log.severe("Could not redirect: " + e.getMessage());
         }
     }
+
+    /**
+     * Basic check for overall functionality of the app.
+     * It sends a ping to the datasource as well to
+     * check db connection
+     *
+     * @param exchange for handling http requests
+     */
+    private static void health(HttpExchange exchange) {
+        boolean dbOk = DataSource.health();
+
+        if (!dbOk) {
+            String msg = "Health check failed: DataSource is not connected!";
+            log.severe(msg);
+            exchangeTextResponse(exchange, msg, 503);
+        }
+        log.info("Health check completed");
+        exchangeTextResponse(exchange, "OK", 200);
+    }
+
 
     /**
      * Helper method to avoid boiler.

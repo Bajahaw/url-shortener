@@ -75,6 +75,22 @@ public class DataSource {
         }
     }
 
+    public static boolean health() {
+        String sql = "SELECT 1 FROM urls";
+        try (var connection = dataSource.getConnection();
+             var statement = connection.prepareStatement(sql)
+        ) {
+
+            ResultSet result = statement.executeQuery();
+            if (result.next()) return true;
+
+        } catch (SQLException e) {
+            log.severe("Failed to retrieve from database - " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
     private static String getEnvOrElse(String key, String defaultValue) {
         String value = System.getenv(key);
         return value != null ? value : defaultValue;
