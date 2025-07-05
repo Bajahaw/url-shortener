@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -17,10 +16,8 @@ public class Controller {
 
     private static final Logger log = Logger.getLogger(Controller.class.getName());
     private static final Map<String, String> cache = Collections.synchronizedMap(new SizedLinkedHashMap<>(1024));
-    private static final SecureRandom random = new SecureRandom();
-    private static final char[] alphabets = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    private static final String baseUrl = "https://url.radhi.tech/";
-    private static final int PORT = 8080;
+    private static final String BASE_URL = Utils.getEnvOrElse("BASE_URL", "http://localhost:8080/");
+    private static final int PORT = Integer.parseInt(Utils.getEnvOrElse("SERVER_PORT", "8080"));
 
     /**
      * Main method to start the server and create the needed endpoints.
@@ -73,7 +70,7 @@ public class Controller {
             return;
         }
 
-        String key = generateKey(6);
+        String key = Utils.generateKey(6);
 
         // Saving source url in cache as well as in db
         // no need to synchronize cuz cache is Collections.synchronizedMap
@@ -81,7 +78,7 @@ public class Controller {
         DataSource.save(key, src);
 
         // send shortened url back as string
-        String url = baseUrl + key;
+        String url = BASE_URL + key;
         exchangeTextResponse(exchange, url, 200);
     }
 
@@ -166,21 +163,5 @@ public class Controller {
         } catch (IOException e) {
             log.severe("Error happened while Sending " + code + " response: " + body + " - " + e.getMessage());
         }
-    }
-
-    /**
-     * Helper method for generating random and unique keys
-     *
-     * @param len The length of the required key
-     * @return the generated key as String
-     */
-    private static String generateKey(int len) {
-        StringBuilder key = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            int rnd = random.nextInt(alphabets.length);
-            char chr = alphabets[rnd];
-            key.append(chr);
-        }
-        return key.toString();
     }
 }

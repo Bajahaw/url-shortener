@@ -10,10 +10,10 @@ public class DataSource {
     private final static Logger log = Logger.getLogger(DataSource.class.getName());
 
     // !Important: Do NOT use default values in production
-    private static final String url = getEnvOrElse("DATABASE_URL", "localhost:5432");
-    private static final String username = getEnvOrElse("DATABASE_USERNAME", "user");
-    private static final String password = getEnvOrElse("DATABASE_PASSWORD", "pass");
-    private static final String dbName = getEnvOrElse("DATABASE_NAME", "urls");
+    private static final String url = Utils.getEnvOrElse("DATABASE_URL", "localhost:5432");
+    private static final String username = Utils.getEnvOrElse("DATABASE_USERNAME", "user");
+    private static final String password = Utils.getEnvOrElse("DATABASE_PASSWORD", "pass");
+    private static final String dbName = Utils.getEnvOrElse("DATABASE_NAME", "urls");
 
     private static final PGSimpleDataSource dataSource = new PGSimpleDataSource();
 
@@ -89,10 +89,5 @@ public class DataSource {
             return false;
         }
         return true;
-    }
-
-    private static String getEnvOrElse(String key, String defaultValue) {
-        String value = System.getenv(key);
-        return value != null ? value : defaultValue;
     }
 }
