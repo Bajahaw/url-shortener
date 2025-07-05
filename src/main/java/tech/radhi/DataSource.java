@@ -26,14 +26,15 @@ public class DataSource {
         dataSource.setPassword(password);
 
         try (var connection = dataSource.getConnection();
-             var statement = connection.createStatement()) {
+             var statement = connection.createStatement()
+        ) {
             String sql = """
                     CREATE TABLE IF NOT EXISTS urls (
                       id VARCHAR(10) PRIMARY KEY,
                       url TEXT NOT NULL
                     );
                     """;
-            var result = statement.execute(sql);
+            boolean result = statement.execute(sql);
             if (result) log.info("Successfully created table urls");
             else log.info("Table urls exists!");
 
@@ -44,10 +45,10 @@ public class DataSource {
     }
 
     public static void save(String key, String url) {
-        var sql = "INSERT INTO urls VALUES (?, ?)";
+        String sql = "INSERT INTO urls VALUES (?, ?)";
         try (var connection = dataSource.getConnection();
-             var statement = connection.prepareStatement(sql)) {
-
+             var statement = connection.prepareStatement(sql)
+        ) {
             statement.setString(1, key);
             statement.setString(2, url);
             statement.execute();
@@ -58,12 +59,12 @@ public class DataSource {
     }
 
     public static String getUrl(String key) {
-        var sql = "SELECT url FROM urls WHERE id = ?";
+        String sql = "SELECT url FROM urls WHERE id = ?";
         try (var connection = dataSource.getConnection();
-             var statement = connection.prepareStatement(sql)) {
-
+             var statement = connection.prepareStatement(sql)
+        ) {
             statement.setString(1, key);
-            var result = statement.executeQuery();
+            ResultSet result = statement.executeQuery();
             if (result.next())
                 return result.getString("url");
             else return null;
@@ -78,5 +79,4 @@ public class DataSource {
         String value = System.getenv(key);
         return value != null ? value : defaultValue;
     }
-
 }

@@ -61,16 +61,14 @@ public class Controller {
             var _ = URI.create(src);
 
         } catch (Exception e) {
-            var msg = "Not valid URL: '" + src + "' - " + e.getMessage();
+            String msg = "Not valid URL: '" + src + "' - " + e.getMessage();
             exchangeTextResponse(exchange, msg, 400);
-            exchange.close();
             return;
         }
 
-        if (src.length() >= 1000) {
-            var msg = "Invalid URL! URL either empty or too long.";
+        if (src.length() > 1000) {
+            String msg = "URL exceeds length limit: " + src.substring(0, 100);
             exchangeTextResponse(exchange, msg, 400);
-            exchange.close();
             return;
         }
 
@@ -84,12 +82,12 @@ public class Controller {
         // send shortened url back as string
         String url = baseUrl + key;
         exchangeTextResponse(exchange, url, 200);
-        exchange.close();
     }
 
     /**
      * endpoint to redirect to the original URL.
-     * It will look for the key in the map and redirect to the original URL.
+     * It will look for the key in the map and
+     * redirect to the original URL.
      *
      * @param exchange for handling http requests
      */
@@ -98,32 +96,34 @@ public class Controller {
         String key = path.substring(1);
 
         if (!path.startsWith("/") || key.length() != 6 || !key.matches("[a-zA-Z]+")) {
-            var msg = "Invalid path: " + path;
+            String msg = "Invalid path: " + path;
             exchangeTextResponse(exchange, msg, 400);
-            exchange.close();
             return;
         }
 
         // getting destination url
-        String cachedTarget = cache.get(key);
-        String target = cachedTarget != null ? cachedTarget : DataSource.getUrl(key);
+        String cached = cache.get(key);
+        String target = cached != null ? cached : DataSource.getUrl(key);
         if (target == null) {
-            var msg = "Target url not found! - Key: " + key;
+            String msg = "Target url not found! - Key: " + key;
             exchangeTextResponse(exchange, msg, 404);
-        } else {
-            // forwarding to destination url
-            exchange.getResponseHeaders().add("Location", target);
-            try { exchange.sendResponseHeaders(302, -1); }
-            catch (IOException e) {
-                log.severe("Could not redirect: " + e.getMessage());
-            }
+            return;
+
+        } else if (cached == null) {
+            cache.put(key, target);
         }
 
-        exchange.close();
+        // forwarding to destination url
+        try (exchange) {
+            exchange.getResponseHeaders().add("Location", target);
+            exchange.sendResponseHeaders(302, -1);
+        } catch (IOException e) {
+            log.severe("Could not redirect: " + e.getMessage());
+        }
     }
 
     /**
-     * The following method is just a helper to avoid boiler.
+     * Helper method to avoid boiler.
      * It is used to send only text responses with relevant status code
      *
      * @param exchange the same exchange used by the endpoint
@@ -139,7 +139,7 @@ public class Controller {
 
         // write response body
         exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
-        try {
+        try (exchange) {
             exchange.sendResponseHeaders(code, res.length);
             exchange.getResponseBody().write(res);
         } catch (IOException e) {
