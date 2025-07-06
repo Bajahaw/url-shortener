@@ -49,6 +49,14 @@ public class Controller {
      * @param exchange for handling http requests
      */
     private static void shorten(HttpExchange exchange) {
+
+        String path = exchange.getRequestURI().getPath();
+        if (!path.equals("/shorten")) {
+            String msg = "Invalid path: " + path;
+            exchangeTextResponse(exchange, msg, 400);
+            return;
+        }
+
         String src = null;
         try {
             src = new String(
@@ -56,7 +64,7 @@ public class Controller {
                     StandardCharsets.UTF_8
             );
             // validate input by creating a URI
-            var _ = URI.create(src);
+            var _ = URI.create(src).toURL();
 
         } catch (Exception e) {
             String msg = "Not valid URL: '" + src + "' - " + e.getMessage();
