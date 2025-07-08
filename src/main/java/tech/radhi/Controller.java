@@ -64,7 +64,10 @@ public class Controller {
                     StandardCharsets.UTF_8
             );
             // validate input by creating a URI
-            var _ = URI.create(src).toURL();
+            var url = URI.create(src);
+            if (url.getScheme()==null || url.getHost()==null) {
+                throw new IllegalArgumentException("Missing scheme or host");
+            }
 
         } catch (Exception e) {
             String msg = "Not valid URL: '" + src + "' - " + e.getMessage();
