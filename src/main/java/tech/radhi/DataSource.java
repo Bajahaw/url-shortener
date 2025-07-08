@@ -39,7 +39,7 @@ public class DataSource {
             else log.info("Table urls exists!");
 
         } catch (SQLException e) {
-            log.severe("Failed to connect to database - " + e.getMessage());
+            log.severe("Failed to connect to database - " + e);
             throw new RuntimeException(e);
         }
     }

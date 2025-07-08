@@ -49,7 +49,7 @@ public class Controller {
      * @param exchange for handling http requests
      */
     private static void shorten(HttpExchange exchange) {
-
+        if (handleCorsPreflight(exchange)) return;
         String path = exchange.getRequestURI().getPath();
         if (!path.equals("/shorten")) {
             String msg = "Invalid path: " + path;
@@ -98,6 +98,7 @@ public class Controller {
      * @param exchange for handling http requests
      */
     private static void redirect(HttpExchange exchange) {
+        if (handleCorsPreflight(exchange)) return;
         String path = exchange.getRequestURI().getPath();
         String key = path.substring(1);
 
@@ -136,6 +137,7 @@ public class Controller {
      * @param exchange for handling http requests
      */
     private static void health(HttpExchange exchange) {
+        if (handleCorsPreflight(exchange)) return;
         boolean dbOk = DataSource.health();
 
         if (!dbOk) {
@@ -172,5 +174,27 @@ public class Controller {
         } catch (IOException e) {
             log.severe("Error happened while Sending " + code + " response: " + body + " - " + e.getMessage());
         }
+    }
+
+    /**
+     * Helper method to handle CORS preflight requests.
+     * It adds the necessary headers to the response.
+     *
+     * @param exchange the HttpExchange object
+     */
+    private static boolean handleCorsPreflight(HttpExchange exchange) {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+        if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+            try {
+                exchange.sendResponseHeaders(204, -1);
+                return true;
+
+            } catch (IOException e) {
+                log.severe("Error handling CORS preflight request: " + e.getMessage());
+            }
+        }
+        return false;
     }
 }

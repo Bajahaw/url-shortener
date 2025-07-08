@@ -30,4 +30,4 @@ WORKDIR /app
 COPY --from=build /app/build/native/nativeCompile/url-shortener /app/shortener
 
 # start the application
-CMD ["./shortener", "-Dspring.profiles.active=production"]
+CMD ["./shortener"]
