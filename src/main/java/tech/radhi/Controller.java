@@ -142,6 +142,7 @@ public class Controller {
             String msg = "Health check failed: DataSource is not connected!";
             log.severe(msg);
             exchangeTextResponse(exchange, msg, 503);
+            return;
         }
         log.info("Health check completed");
         exchangeTextResponse(exchange, "OK", 200);
