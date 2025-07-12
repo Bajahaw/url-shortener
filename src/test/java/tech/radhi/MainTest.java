@@ -13,6 +13,8 @@ class MainTest {
 
     @BeforeAll
     static void startServer() throws IOException {
+        // Set the BASE_URL environment variable for testing
+        System.setProperty("BASE_URL", BASE);
         LoggingSetup.configure();
         Controller.start();
         client = HttpClient.newHttpClient();
@@ -147,5 +149,110 @@ class MainTest {
         } else {
             assertTrue(resp.body().contains("Health check failed"));
         }
+    }
+
+    @Test
+    void testCheckValidShortenedUrl() throws Exception {
+        // First create a shortened URL
+        var createReq = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/shorten"))
+                .POST(HttpRequest.BodyPublishers.ofString("https://github.com"))
+                .build();
+        var createResp = client.send(createReq, HttpResponse.BodyHandlers.ofString());
+        String shortenedUrl = createResp.body();
+
+        // Now check the shortened URL
+        var checkReq = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString(shortenedUrl))
+                .build();
+        var checkResp = client.send(checkReq, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, checkResp.statusCode());
+        assertEquals("https://github.com", checkResp.body());
+    }
+
+    @Test
+    void testCheckInvalidUrl() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString("not-a-valid-url"))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, resp.statusCode());
+        assertTrue(resp.body().contains("Invalid URL"));
+    }
+
+    @Test
+    void testCheckThirdPartyUrl() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString("https://example.com/abc123"))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, resp.statusCode());
+        assertTrue(resp.body().contains("Checking 3rd party URLs is not yet supported"));
+    }
+
+    @Test
+    void testCheckNonExistentKey() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString(BASE + "/notfnd"))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(404, resp.statusCode());
+        assertTrue(resp.body().contains("Target url not found"));
+    }
+
+    @Test
+    void testCheckEmptyBody() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString(""))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, resp.statusCode());
+        assertTrue(resp.body().contains("Invalid URL"));
+    }
+
+    @Test
+    void testCheckUrlWithoutScheme() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString("url.radhi.tech/abc123"))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, resp.statusCode());
+        assertTrue(resp.body().contains("Invalid URL"));
+    }
+
+    @Test
+    void testCheckUrlWithoutHost() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .POST(HttpRequest.BodyPublishers.ofString("https:///abc123"))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, resp.statusCode());
+        assertTrue(resp.body().contains("Invalid URL"));
+    }
+
+    @Test
+    void testCheckWithGetMethod() throws Exception {
+        var req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + "/check"))
+                .method("GET", HttpRequest.BodyPublishers.ofString(BASE + "/abc123"))
+                .build();
+        var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(404, resp.statusCode());
+        assertTrue(resp.body().contains("Target url not found"));
     }
 }

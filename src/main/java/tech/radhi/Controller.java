@@ -30,6 +30,7 @@ public class Controller {
 
         // Controller endpoints
         server.createContext("/shorten", Controller::shorten);
+        server.createContext("/check", Controller::check);
         server.createContext("/health", Controller::health);
         server.createContext("/", Controller::redirect);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
@@ -65,9 +66,8 @@ public class Controller {
             );
             // validate input by creating a URI
             var url = URI.create(src);
-            if (url.getScheme()==null || url.getHost()==null) {
+            if (url.getScheme()==null || url.getHost()==null)
                 throw new IllegalArgumentException("Missing scheme or host");
-            }
 
         } catch (Exception e) {
             String msg = "Not valid URL: '" + src + "' - " + e.getMessage();
@@ -94,6 +94,50 @@ public class Controller {
     }
 
     /**
+     * endpoint to check the destination URL without redirecting.
+     * request should contain the full url in the body.
+     *
+     * @param exchange for handling http requests
+     */
+    private static void check(HttpExchange exchange) {
+        if (handleCorsPreflight(exchange)) return;
+        String body = null;
+        URI uri;
+        try {
+            body = new String(
+                    exchange.getRequestBody().readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
+            uri = URI.create(body);
+            if (uri.getScheme() == null || uri.getHost() == null)
+                throw new IllegalArgumentException("Missing scheme or host");
+
+        } catch (Exception e) {
+            String msg = "Invalid URL: '" + body + "' - " + e.getMessage();
+            exchangeTextResponse(exchange, msg, 400);
+            return;
+        }
+
+        if (!body.startsWith(BASE_URL)) {
+            String msg = "Checking 3rd party URLs is not yet supported! - " + body;
+            exchangeTextResponse(exchange, msg, 400);
+            return;
+        }
+
+        String key = uri.getPath().substring(1);
+        // getting destination url
+        String origin = cache.computeIfAbsent(key, DataSource::getUrl);
+        if (origin == null) {
+            String msg = "Origin url not found! - Key: " + key;
+            exchangeTextResponse(exchange, msg, 404);
+            return;
+        }
+
+        // sending the target url back
+        exchangeTextResponse(exchange, origin, 200);
+    }
+
+    /**
      * endpoint to redirect to the original URL.
      * It will look for the key in the map and
      * redirect to the original URL.
@@ -112,15 +156,11 @@ public class Controller {
         }
 
         // getting destination url
-        String cached = cache.get(key);
-        String target = cached != null ? cached : DataSource.getUrl(key);
+        String target = cache.computeIfAbsent(key, DataSource::getUrl);
         if (target == null) {
             String msg = "Target url not found! - Key: " + key;
             exchangeTextResponse(exchange, msg, 404);
             return;
-
-        } else if (cached == null) {
-            cache.put(key, target);
         }
 
         // forwarding to destination url
