@@ -1,39 +1,53 @@
 export function renderAnalysisSection(): string {
     return `
-    <div class="bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-800 my-8 fade-in">
-      <h2 class="text-xl font-bold text-white mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-800 my-8 fade-in glow">
+      <h2 class="text-2xl font-bold text-white mb-6 flex items-center justify-center">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         URL Analysis
       </h2>
-      <div class="space-y-4">
+      <div class="space-y-6">
         <div>
-          <label for="analyzeInput" class="block text-zinc-200 font-medium mb-2">
+          <label for="analyzeInput" class="block text-zinc-300 text-sm font-medium mb-2">
             Analyze URL Origin
           </label>
-          <div class="flex space-x-2">
-            <input
-              type="url"
-              id="analyzeInput"
-              placeholder="https://example.com/suspicious-link"
-              class="flex-1 px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"/>
+          <div class="space-y-6">
+            <div class="relative">
+              <input
+                type="url"
+                id="analyzeInput"
+                placeholder="https://example.com/suspicious-link"
+                class="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"/>
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+              </div>
+            </div>
             <button
               id="analyzeBtn"
-              class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors shadow-lg">
-              Analyze
+              class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
+              <span class="flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Analyze
+              </span>
             </button>
           </div>
         </div>
 
-        <div id="analysisResults" class="hidden mt-4 p-4 bg-zinc-800 rounded-lg border border-zinc-700">
+        <div id="analysisResults" class="hidden mt-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700">
           <div id="analysisContent"></div>
         </div>
 
-        <div id="analysisLoading" class="hidden text-center py-4">
-          <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-          <p class="text-zinc-300 mt-2 text-sm">Analyzing URL...</p>
+        <div id="analysisLoading" class="hidden text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+          <p class="text-zinc-300 mt-2">Analyzing URL...</p>
         </div>
       </div>
     </div>
@@ -45,7 +59,7 @@ export function renderFormSection(): string {
     <div class="bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-800 glow fade-in">
       <form id="shortenForm" class="space-y-6">
         <div>
-          <label for="urlInput" class="block text-zinc-200 font-medium mb-2">
+          <label for="urlInput" class="block text-zinc-300 text-sm font-medium mb-2">
             Enter your URL
           </label>
           <div class="relative">
@@ -67,7 +81,7 @@ export function renderFormSection(): string {
         <button
           type="submit"
           id="shortenBtn"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
+          class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
           <span class="flex items-center justify-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -115,9 +129,9 @@ export function renderHeader(): string {
 
 export function renderResultsSection(): string {
     return `
-    <div id="results" class="hidden mt-8 bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-800 fade-in">
+    <div id="results" class="hidden mt-8 bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-800 fade-in glow">
       <h3 class="text-2xl font-bold text-white mb-6 text-center">Your Short URL is Ready! 🎉</h3>
-      <div class="space-y-4">
+      <div class="space-y-6">
         <div>
           <label class="block text-zinc-300 text-sm font-medium mb-2">Short URL</label>
           <div class="flex items-center space-x-2">
@@ -128,7 +142,7 @@ export function renderResultsSection(): string {
               class="flex-1 px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:outline-none"/>
             <button
               id="copyBtn"
-              class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors shadow-lg"
+              class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
               title="Copy to clipboard">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -148,8 +162,14 @@ export function renderResultsSection(): string {
       </div>
       <button
         id="newUrlBtn"
-        class="w-full mt-6 bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-6 rounded-lg transition-all border border-zinc-700">
-        Shorten Another URL
+        class="w-full mt-6 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 border border-zinc-700 shadow-lg">
+        <span class="flex items-center justify-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4v16m8-8H4"/>
+          </svg>
+          Shorten Another URL
+        </span>
       </button>
     </div>
   `;
